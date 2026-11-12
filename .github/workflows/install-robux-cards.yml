@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "robux-card-assets.zip"
+      - "index.html"
       - ".github/workflows/install-robux-cards.yml"
 
 permissions:
