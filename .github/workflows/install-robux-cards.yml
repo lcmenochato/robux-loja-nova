@@ -1,0 +1,50 @@
+name: Install Robux card images
+
+on:
+  push:
+    paths:
+      - "robux-card-assets.zip"
+      - ".github/workflows/install-robux-cards.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  install-cards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Extract images and update product cards
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/robux-assets
+          unzip -o robux-card-assets.zip -d /tmp/robux-assets
+          cp /tmp/robux-assets/robux-1200.webp images/
+          cp /tmp/robux-assets/robux-1700.webp images/
+          cp /tmp/robux-assets/robux-2100.webp images/
+          cp /tmp/robux-assets/robux-3600.webp images/
+          cp /tmp/robux-assets/robux-4500.webp images/
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("index.html")
+          html = p.read_text(encoding="utf-8")
+          replacements = {
+              "./images/15_f5ef88023d88569.webp": "./images/robux-1200.webp",
+              "./images/16_2cfce16f7225c0e.webp": "./images/robux-1700.webp",
+              "./images/17_0b6b65729030d9c.webp": "./images/robux-2100.webp",
+              "./images/18_3ba161cabbe05ac.webp": "./images/robux-3600.webp",
+              "./images/19_4fbbbaeba038101.webp": "./images/robux-4500.webp",
+          }
+          for old, new in replacements.items():
+              if old not in html:
+                  raise SystemExit(f"Não encontrei o caminho esperado: {old}")
+              html = html.replace(old, new)
+          p.write_text(html, encoding="utf-8")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add images/robux-*.webp index.html
+          git commit -m "Update Robux product card artwork"
+          git push
